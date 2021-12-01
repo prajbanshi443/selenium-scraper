@@ -1,3 +1,4 @@
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -19,19 +20,7 @@ def get_videos(driver):
   return videos
 
 
-if __name__ == "__main__":
-  print('Creating driver')
-  driver = get_driver()
-
-  print('Fetching trending videos')
-  videos = get_videos(driver)
-
-  print(f'Found {len(videos)} videos')
-
-
-  print('Parsing the first video')
-  # title, url, thumbnail_url, channel, views, uploaded, description
-  video = videos[0]
+def parse_video(video):
   title_tag = video.find_element(By.ID, 'video-title')
   title = title_tag.text
   
@@ -44,9 +33,30 @@ if __name__ == "__main__":
   channel_name = channel_div.text
 
   description = video.find_element(By.ID, 'description-text').text
-  print('Title:', title)
-  print('URL:', url)
-  print('Thumbnail URL:', thumbnail_url)
-  print('Channel Name:', channel_name)
-  print('Description:', description)
 
+  return {
+    'title': title,
+    'url': url,
+    'thumbnail_url': thumbnail_url,
+    'channel': channel_name,
+    'description': description
+  }  
+
+if __name__ == "__main__":
+  print('Creating driver')
+  driver = get_driver()
+
+  print('Fetching trending videos')
+  videos = get_videos(driver)
+
+  print(f'Found {len(videos)} videos')
+
+
+  print('Parsing top 10 videos')
+  videos_data = [parse_video(video) for video in videos[:10]]
+  print(videos_data) 
+
+  print('Save the data to a CSV')
+  videos_df = pd.DataFrame(videos_data)
+  print(videos_df)
+  videos_df.to_csv('trending.csv')
